@@ -3,6 +3,7 @@ from __future__ import annotations
 import bpy
 
 from .constants import OPERATOR_ID, OPERATOR_LABEL
+from .face_classifier import FaceClassifier, FaceType
 from .mesh_analyzer import MeshAnalyzer
 from .utils import get_active_mesh_object
 
@@ -20,6 +21,8 @@ class MESH2SHEET_OT_analyze_mesh(bpy.types.Operator):
             return {"CANCELLED"}
 
         result = MeshAnalyzer().analyze(obj)
+        classifications = FaceClassifier().classify(obj, result)
+
         print("Mesh Analysis")
         print("")
         print("Vertices:")
@@ -66,6 +69,34 @@ class MESH2SHEET_OT_analyze_mesh(bpy.types.Operator):
             print("Warnings:")
             for warning in result.warnings:
                 print(f"- {warning}")
+
+        print("")
+        print("Face Classification")
+        print("")
+        print("Planar:")
+        print(sum(1 for item in classifications if item.classification is FaceType.PLANAR))
+        print("")
+        print("Curved:")
+        print(sum(1 for item in classifications if item.classification is FaceType.CURVED))
+        print("")
+        print("Boundary:")
+        print(sum(1 for item in classifications if item.classification is FaceType.BOUNDARY))
+        print("")
+        print("Small Features:")
+        print(sum(1 for item in classifications if item.classification is FaceType.SMALL_FEATURE))
+        print("")
+        print("Unknown:")
+        print(sum(1 for item in classifications if item.classification is FaceType.UNKNOWN))
+
+        total_classified_faces = len(classifications)
+        print("")
+        print("Total Classified Faces:")
+        print(total_classified_faces)
+
+        if total_classified_faces != result.face_count:
+            raise RuntimeError(
+                f"Face classification count mismatch: expected {result.face_count}, got {total_classified_faces}"
+            )
 
         self.report({"INFO"}, f"Analyzed {obj.name}")
         return {"FINISHED"}
