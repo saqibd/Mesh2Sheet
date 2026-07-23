@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import bpy
 
-from .constants import OPERATOR_ID, OPERATOR_LABEL
+from .constants import (
+    OPERATOR_ID,
+    OPERATOR_LABEL,
+    VISUALIZE_OPERATOR_ID,
+    VISUALIZE_OPERATOR_LABEL,
+)
 from .face_classifier import FaceClassifier, FaceType
 from .mesh_analyzer import MeshAnalyzer
 from .panel_detector import PanelDetector
+from .panel_visualizer import PanelVisualizer
 from .utils import get_active_mesh_object
 
 
@@ -119,4 +125,33 @@ class MESH2SHEET_OT_analyze_mesh(bpy.types.Operator):
         print(f"{panel_result.average_panel_size:.2f}")
 
         self.report({"INFO"}, f"Analyzed {obj.name}")
+        return {"FINISHED"}
+
+
+class MESH2SHEET_OT_visualize_panels(bpy.types.Operator):
+    """Visualize detected panels by assigning a unique face color per panel."""
+
+    bl_idname = VISUALIZE_OPERATOR_ID
+    bl_label = VISUALIZE_OPERATOR_LABEL
+
+    def execute(self, context: bpy.types.Context) -> set[str]:
+        obj = get_active_mesh_object(context)
+        if obj is None:
+            self.report({"ERROR"}, "No active mesh object selected")
+            return {"CANCELLED"}
+
+        analysis = MeshAnalyzer().analyze(obj)
+        classifications = FaceClassifier().classify(obj, analysis)
+        panel_result = PanelDetector().detect(obj, classifications)
+
+        PanelVisualizer().visualize(obj, panel_result)
+
+        print("Panel Visualization")
+        print("")
+        print("Panels Colored:")
+        print(panel_result.panel_count)
+        print("")
+        print("Visualization Complete")
+
+        self.report({"INFO"}, f"Visualized {panel_result.panel_count} panels")
         return {"FINISHED"}

@@ -26,3 +26,4 @@ class MESH2SHEET_PT_main_panel(bpy.types.Panel):
             box.label(text=obj.name)
 
         box.operator("mesh2sheet.analyze_mesh")
+        box.operator("mesh2sheet.visualize_panels")

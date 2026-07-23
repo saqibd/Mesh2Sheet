@@ -11,12 +11,13 @@ bl_info = {
 }
 
 from .constants import ADDON_NAME, PANEL_ID, PANEL_LABEL
-from .operators import MESH2SHEET_OT_analyze_mesh
+from .operators import MESH2SHEET_OT_analyze_mesh, MESH2SHEET_OT_visualize_panels
 from .panel import MESH2SHEET_PT_main_panel
 from .properties import register_properties, unregister_properties
 
 classes = (
     MESH2SHEET_OT_analyze_mesh,
+    MESH2SHEET_OT_visualize_panels,
     MESH2SHEET_PT_main_panel,
 )
 
