@@ -25,5 +25,17 @@ class MESH2SHEET_PT_main_panel(bpy.types.Panel):
         else:
             box.label(text=obj.name)
 
-        box.operator("mesh2sheet.analyze_mesh")
-        box.operator("mesh2sheet.visualize_panels")
+        row = box.row()
+        row.operator("mesh2sheet.analyze_mesh")
+
+        refine_row = box.row()
+        refine_row.enabled = obj is not None
+        refine_row.operator("mesh2sheet.refine_panels")
+
+        graph_row = box.row()
+        graph_row.enabled = obj is not None
+        graph_row.operator("mesh2sheet.build_panel_graph")
+
+        visualize_row = box.row()
+        visualize_row.enabled = obj is not None
+        visualize_row.operator("mesh2sheet.visualize_panels")
