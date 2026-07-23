@@ -39,39 +39,33 @@ class MESH2SHEET_OT_analyze_mesh(bpy.types.Operator):
 
         pipeline = PipelineManager.get(context)
         pipeline.clear()
+        pipeline.progress = None
 
-        start = time.perf_counter()
-        print("----------------------------")
-        print("Running Mesh Analysis")
-        result = MeshAnalyzer().analyze(obj)
+        def run_stage(stage_name: str, total_steps: int, action: callable) -> None:
+            if pipeline.cancelled:
+                return
+            progress = pipeline.start_stage(context, stage_name, total_steps)
+            progress.update(1, f"Running {stage_name}")
+            start = time.perf_counter()
+            result = action()
+            elapsed = time.perf_counter() - start
+            pipeline.finish_stage(stage_name, elapsed)
+            progress.update(total_steps, f"Completed {stage_name}")
+            return result
+
+        result = run_stage("Mesh Analysis", 1, lambda: MeshAnalyzer().analyze(obj))
         pipeline.mesh_analysis = result
-        print("Completed Mesh Analysis")
-        print(f"Execution Time: {time.perf_counter() - start:.3f} ms")
-        print("----------------------------")
 
-        start = time.perf_counter()
-        print("Running Face Classification")
-        classifications = FaceClassifier().classify(obj, result)
+        classifications = run_stage("Face Classification", 1, lambda: FaceClassifier().classify(obj, result))
         pipeline.face_classification = classifications
-        print("Completed Face Classification")
-        print(f"Execution Time: {time.perf_counter() - start:.3f} ms")
-        print("----------------------------")
 
-        start = time.perf_counter()
-        print("Running Edge Classification")
-        edge_classifications = EdgeClassifier().classify(obj)
+        edge_classifications = run_stage("Edge Classification", 1, lambda: EdgeClassifier().classify(obj))
         pipeline.edge_classification = edge_classifications
-        print("Completed Edge Classification")
-        print(f"Execution Time: {time.perf_counter() - start:.3f} ms")
-        print("----------------------------")
 
-        start = time.perf_counter()
-        print("Running Panel Detection")
-        panel_result = PanelDetector().detect(obj, classifications)
+        panel_result = run_stage("Panel Detection", 1, lambda: PanelDetector().detect(obj, classifications))
         pipeline.panel_detection = panel_result
-        print("Completed Panel Detection")
-        print(f"Execution Time: {time.perf_counter() - start:.3f} ms")
-        print("----------------------------")
+
+        pipeline.print_summary()
 
         print("Mesh Analysis")
         print("")
@@ -135,14 +129,17 @@ class MESH2SHEET_OT_refine_panels(bpy.types.Operator):
             self.report({"ERROR"}, "No active mesh object selected")
             return {"CANCELLED"}
 
+        if pipeline.cancelled:
+            return {"CANCELLED"}
+
+        progress = pipeline.start_stage(context, "Panel Refinement", 1)
+        progress.update(1, "Refining panels...")
         start = time.perf_counter()
-        print("----------------------------")
-        print("Running Panel Refinement")
         refined_result = PanelRefiner().refine(pipeline.panel_detection, obj.data, pipeline.face_classification)
         pipeline.panel_refinement = refined_result
-        print("Completed Panel Refinement")
-        print(f"Execution Time: {time.perf_counter() - start:.3f} ms")
-        print("----------------------------")
+        elapsed = time.perf_counter() - start
+        pipeline.finish_stage("Panel Refinement", elapsed)
+        progress.update(1, "Panel Refinement Complete")
         print("Panel Refinement Complete")
         return {"FINISHED"}
 
@@ -164,15 +161,18 @@ class MESH2SHEET_OT_build_panel_graph(bpy.types.Operator):
             self.report({"ERROR"}, "No active mesh object selected")
             return {"CANCELLED"}
 
+        if pipeline.cancelled:
+            return {"CANCELLED"}
+
+        progress = pipeline.start_stage(context, "Panel Graph", 1)
+        progress.update(1, "Building graph...")
         start = time.perf_counter()
-        print("----------------------------")
-        print("Running Panel Graph")
         panel_source = pipeline.panel_refinement or pipeline.panel_detection
         graph_result = PanelGraph().build(obj, panel_source)
         pipeline.panel_graph = graph_result
-        print("Completed Panel Graph")
-        print(f"Execution Time: {time.perf_counter() - start:.3f} ms")
-        print("----------------------------")
+        elapsed = time.perf_counter() - start
+        pipeline.finish_stage("Panel Graph", elapsed)
+        progress.update(1, "Panel Graph Complete")
         print("Panel Graph Complete")
         return {"FINISHED"}
 
