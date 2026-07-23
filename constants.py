@@ -1,0 +1,5 @@
+ADDON_NAME = "Mesh2Sheet"
+PANEL_ID = "MESH2SHEET_PT_main_panel"
+PANEL_LABEL = "Mesh2Sheet"
+OPERATOR_ID = "mesh2sheet.analyze_mesh"
+OPERATOR_LABEL = "Analyze Mesh"
