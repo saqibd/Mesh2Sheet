@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Blender backup files
+*.blend1
+*.blend2
+
+# IDE
+.vscode/
+.idea/
+
+# Test cache
+.pytest_cache/
+
+# Build output
+dist/
+
+# Operating system files
+Thumbs.db
+.DS_Store
