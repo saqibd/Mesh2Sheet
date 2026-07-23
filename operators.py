@@ -5,6 +5,7 @@ import bpy
 from .constants import OPERATOR_ID, OPERATOR_LABEL
 from .face_classifier import FaceClassifier, FaceType
 from .mesh_analyzer import MeshAnalyzer
+from .panel_detector import PanelDetector
 from .utils import get_active_mesh_object
 
 
@@ -97,6 +98,25 @@ class MESH2SHEET_OT_analyze_mesh(bpy.types.Operator):
             raise RuntimeError(
                 f"Face classification count mismatch: expected {result.face_count}, got {total_classified_faces}"
             )
+
+        print("Starting Panel Detection...")
+        panel_result = PanelDetector().detect(obj, classifications)
+        print("Panel Detection Complete.")
+        print(f"Number of panels returned: {len(panel_result.panels)}")
+        print("")
+        print("Panel Detection")
+        print("")
+        print("Panels Found:")
+        print(panel_result.panel_count)
+        print("")
+        print("Largest Panel:")
+        print(panel_result.largest_panel_size)
+        print("")
+        print("Smallest Panel:")
+        print(panel_result.smallest_panel_size)
+        print("")
+        print("Average Panel Size:")
+        print(f"{panel_result.average_panel_size:.2f}")
 
         self.report({"INFO"}, f"Analyzed {obj.name}")
         return {"FINISHED"}
