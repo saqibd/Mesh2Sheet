@@ -3,12 +3,12 @@ from __future__ import annotations
 import bpy
 
 from .constants import OPERATOR_ID, OPERATOR_LABEL
-from .mesh_analyzer import analyze_mesh
+from .mesh_analyzer import MeshAnalyzer
 from .utils import get_active_mesh_object
 
 
 class MESH2SHEET_OT_analyze_mesh(bpy.types.Operator):
-    """Analyze the active mesh object and report its basic statistics."""
+    """Analyze the active mesh object and report its structural statistics."""
 
     bl_idname = OPERATOR_ID
     bl_label = OPERATOR_LABEL
@@ -19,10 +19,53 @@ class MESH2SHEET_OT_analyze_mesh(bpy.types.Operator):
             self.report({"ERROR"}, "No active mesh object selected")
             return {"CANCELLED"}
 
-        result = analyze_mesh(obj)
-        print(f"Object Name: {result['name']}")
-        print(f"Vertex Count: {result['vertex_count']}")
-        print(f"Edge Count: {result['edge_count']}")
-        print(f"Face Count: {result['face_count']}")
-        self.report({"INFO"}, f"Analyzed {result['name']}")
+        result = MeshAnalyzer().analyze(obj)
+        print("Mesh Analysis")
+        print("")
+        print("Vertices:")
+        print(result.vertex_count)
+        print("")
+        print("Edges:")
+        print(result.edge_count)
+        print("")
+        print("Faces:")
+        print(result.face_count)
+        print("")
+        print("Boundary Edge Count:")
+        print(result.boundary_edge_count)
+        print("")
+        print("Non-Manifold Edge Count:")
+        print(result.non_manifold_edge_count)
+        print("")
+        print("Loose Vertex Count:")
+        print(result.loose_vertex_count)
+        print("")
+        print("Bounding Box Width:")
+        print(f"{result.bounding_box_width:.6f}")
+        print("")
+        print("Bounding Box Depth:")
+        print(f"{result.bounding_box_depth:.6f}")
+        print("")
+        print("Bounding Box Height:")
+        print(f"{result.bounding_box_height:.6f}")
+        print("")
+        print("Surface Area:")
+        print(f"{result.surface_area:.6f}")
+        print("")
+        print("Average Face Area:")
+        print(f"{result.average_face_area:.6f}")
+        print("")
+        print("Average Edge Length:")
+        print(f"{result.average_edge_length:.6f}")
+        print("")
+        print("Watertight:")
+        print("Yes" if result.is_watertight else "No")
+
+        if result.warnings:
+            print("")
+            print("Warnings:")
+            for warning in result.warnings:
+                print(f"- {warning}")
+
+        self.report({"INFO"}, f"Analyzed {obj.name}")
         return {"FINISHED"}
